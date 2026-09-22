@@ -1,13 +1,28 @@
 <template>
   <q-page class="page-pad">
-    <div class="row items-center q-mb-md">
+    <div class="row items-center q-mb-md q-gutter-sm">
       <div class="text-h5">作业历史</div>
       <q-space />
+      <q-input
+        v-model="remarkKeyword"
+        dense
+        outlined
+        clearable
+        debounce="300"
+        placeholder="按备注词过滤（服务端）"
+        class="remark-search"
+        @update:model-value="load"
+        @keyup.enter="load"
+        @clear="load"
+      >
+        <template #append>
+          <q-btn flat dense icon="search" label="搜索" @click="load" :loading="loading" />
+        </template>
+      </q-input>
       <q-btn flat icon="refresh" label="刷新" @click="load" :loading="loading" />
       <q-btn
         v-if="auth.role === 'bioops'"
         color="primary"
-        class="q-ml-sm"
         label="新建作业"
         to="/jobs/new"
       />
@@ -59,10 +74,12 @@ const auth = useAuthStore()
 const $q = useQuasar()
 const loading = ref(false)
 const rows = ref([])
+const remarkKeyword = ref('')
 
 const columns = [
   { name: 'id', label: 'ID', field: 'id', align: 'left' },
   { name: 'sample_name', label: '样例', field: 'sample_name', align: 'left' },
+  { name: 'remark', label: '备注', field: 'remark', align: 'left' },
   { name: 'status', label: '状态', field: 'status', align: 'left' },
   { name: 'created_by', label: '提交人', field: 'created_by', align: 'left' },
   { name: 'metrics', label: '指标摘要', field: 'metrics', align: 'left' },
@@ -87,7 +104,7 @@ function statusColor(s) {
 async function load() {
   loading.value = true
   try {
-    rows.value = await listJobs()
+    rows.value = await listJobs(remarkKeyword.value)
   } catch (e) {
     $q.notify({ type: 'negative', message: e.message || '加载失败' })
   } finally {
@@ -97,3 +114,10 @@ async function load() {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.remark-search {
+  width: 280px;
+  max-width: 60vw;
+}
+</style>

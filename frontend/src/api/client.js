@@ -42,8 +42,12 @@ export async function listSamples() {
   return data
 }
 
-export async function listJobs() {
-  const { data } = await api.get('/jobs')
+export async function listJobs(remark) {
+  const params = {}
+  if (remark && remark.trim()) {
+    params.remark = remark.trim()
+  }
+  const { data } = await api.get('/jobs', { params })
   return data
 }
 

@@ -62,6 +62,9 @@ def create_job(
 ):
     sample_id = body.sampleId
     fastq_text = (body.fastqText or "").strip() if body.fastqText else ""
+    remark = (body.remark or "").strip()
+    if not remark:
+        raise HTTPException(status_code=400, detail="备注不能为空")
     sample_name = "自定义输入"
     sample = None
 
@@ -79,6 +82,7 @@ def create_job(
         sample_name=sample_name,
         status="pending",
         created_by=user["username"],
+        remark=remark,
         fastq_snapshot=fastq_text,
     )
     db.add(job)
@@ -96,9 +100,21 @@ def create_job(
     return job
 
 
+def _escape_like(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 @router.get("/jobs", response_model=list[JobListItem])
-def list_jobs(_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
-    return db.query(Job).order_by(Job.id.desc()).all()
+def list_jobs(
+    remark: str | None = None,
+    _user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Job)
+    keyword = (remark or "").strip()
+    if keyword:
+        query = query.filter(Job.remark.ilike(f"%{_escape_like(keyword)}%", escape="\\"))
+    return query.order_by(Job.id.desc()).all()
 
 
 @router.get("/jobs/{job_id}", response_model=JobOut)

@@ -29,6 +29,7 @@ class SampleOut(BaseModel):
 class JobCreate(BaseModel):
     sampleId: int | None = None
     fastqText: str | None = Field(default=None, alias="fastqText")
+    remark: str = Field(description="作业备注,不能为空")
 
     model_config = {"populate_by_name": True}
 
@@ -51,6 +52,7 @@ class JobOut(BaseModel):
     sample_name: str
     status: str
     created_by: str
+    remark: str
     metrics: dict[str, Any] | None
     error_message: str | None
     created_at: datetime
@@ -66,6 +68,7 @@ class JobListItem(BaseModel):
     sample_name: str
     status: str
     created_by: str
+    remark: str
     metrics: dict[str, Any] | None
     error_message: str | None
     created_at: datetime

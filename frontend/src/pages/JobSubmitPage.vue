@@ -30,10 +30,29 @@
           :input-style="{ minHeight: '160px', fontFamily: 'monospace' }"
           hint="四行一组：@header / 序列 / + / 质量串。若已选样例则优先用样例。"
         />
+
+        <div class="text-subtitle1 q-mt-lg q-mb-sm">作业备注（必填）</div>
+        <q-input
+          v-model="remark"
+          outlined
+          dense
+          clearable
+          maxlength="512"
+          counter
+          label="备注"
+          hint="用于在历史中按备注词检索，例如：肿瘤panel-20260921批次A"
+          :rules="[ (v) => !!v && !!v.trim() || '备注不能为空' ]"
+        />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn flat label="取消" to="/samples" />
-        <q-btn color="primary" label="启动 Actor 流水线" :loading="submitting" @click="submit" />
+        <q-btn
+          color="primary"
+          label="启动 Actor 流水线"
+          :loading="submitting"
+          :disable="auth.role !== 'bioops'"
+          @click="submit"
+        />
       </q-card-actions>
     </q-card>
   </q-page>
@@ -54,6 +73,7 @@ const $q = useQuasar()
 const samples = ref([])
 const sampleId = ref(null)
 const fastqText = ref('')
+const remark = ref('')
 const submitting = ref(false)
 
 const sampleOptions = computed(() =>
@@ -76,6 +96,10 @@ async function load() {
 }
 
 async function submit() {
+  if (!remark.value.trim()) {
+    $q.notify({ type: 'warning', message: '请填写作业备注' })
+    return
+  }
   if (!sampleId.value && !fastqText.value.trim()) {
     $q.notify({ type: 'warning', message: '请选择样例或粘贴 FASTQ 文本' })
     return
@@ -83,8 +107,8 @@ async function submit() {
   submitting.value = true
   try {
     const body = sampleId.value
-      ? { sampleId: sampleId.value }
-      : { fastqText: fastqText.value }
+      ? { sampleId: sampleId.value, remark: remark.value.trim() }
+      : { fastqText: fastqText.value, remark: remark.value.trim() }
     const job = await createJob(body)
     $q.notify({ type: 'positive', message: `作业 #${job.id} 已创建队` })
     router.push(`/jobs/${job.id}`)

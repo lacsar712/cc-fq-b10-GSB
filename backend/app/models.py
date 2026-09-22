@@ -25,6 +25,7 @@ class Job(Base):
     sample_name: Mapped[str] = mapped_column(String(128), default="自定义输入")
     status: Mapped[str] = mapped_column(String(32), default="pending")  # pending/running/success/failed
     created_by: Mapped[str] = mapped_column(String(64), nullable=False)
+    remark: Mapped[str] = mapped_column(String(512), nullable=False, server_default="", default="")
     metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     fastq_snapshot: Mapped[str] = mapped_column(Text, nullable=False)
