@@ -44,18 +44,20 @@ docker compose up --build
 
 1. 打开 http://localhost:3184 ，用 `bioops` / `fastq123456` 登录。
 2. **样例库** 看到 2 条样例 → 选合格样例 **提交质控作业**。
-3. 作业详情页看到四个 Actor 阶段均为成功，指标卡出现 `reads` / `mean_quality` / `n_rate`。
-4. 再跑损坏样例：`ParseActor` = failed，其余 = skipped。
-5. 退出，用 `auditor` / `audit123456` 登录：可看历史与详情，提交作业接口返回 403 / 前端无提交入口。
-6. 健康检查：`curl http://localhost:8184/api/health`
+3. **备注必填**：不填备注点击启动会被拦截；留空/纯空白调用 `POST /api/jobs` 返回 422。填写备注（如 `Alpha批次 复检`）后开跑。
+4. 作业详情页看到四个 Actor 阶段均为成功，指标卡出现 `reads` / `mean_quality` / `n_rate`，横幅中可见本次备注。
+5. 再跑损坏样例：`ParseActor` = failed，其余 = skipped。
+6. **按备注词收缩历史**：历史页输入备注关键词（如 `复检`）→ 服务端过滤后只剩匹配作业；清空关键词恢复全部。
+7. 退出，用 `auditor` / `audit123456` 登录：可看历史（含备注过滤）与详情，提交作业接口返回 403 / 前端无提交入口。
+8. 健康检查：`curl http://localhost:8184/api/health`
 
 ## API
 
 - `POST /api/auth/login`
 - `GET  /api/health`
 - `GET  /api/samples`
-- `POST /api/jobs` `{ "sampleId": 1 }` 或 `{ "fastqText": "..." }`
-- `GET  /api/jobs`
+- `POST /api/jobs` `{ "sampleId": 1, "note": "批次A复检" }` 或 `{ "fastqText": "...", "note": "..." }`（`note` 必填，空/纯空白 → 422）
+- `GET  /api/jobs`（可选 `?note=关键词` 服务端过滤，大小写不敏感、模糊匹配）
 - `GET  /api/jobs/{id}`
 - `GET  /api/jobs/{id}/stages`
 
@@ -67,7 +69,7 @@ pip install -r requirements.txt
 pytest -q
 ```
 
-覆盖：畸形 FASTQ 在 `ParseActor` 失败；正常样例产出 `mean_quality`。
+覆盖：畸形 FASTQ 在 `ParseActor` 失败；正常样例产出 `mean_quality`；空备注开跑被拒（422）；按备注关键词过滤历史；审计员只读（提交 403）。
 
 ## 目录结构
 

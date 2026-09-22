@@ -3,7 +3,19 @@
     <div class="row items-center q-mb-md">
       <div class="text-h5">作业历史</div>
       <q-space />
-      <q-btn flat icon="refresh" label="刷新" @click="load" :loading="loading" />
+      <q-input
+        v-model="keyword"
+        outlined
+        dense
+        clearable
+        placeholder="按备注关键词过滤"
+        class="q-mr-sm"
+        style="width: 240px"
+        @keyup.enter="load"
+        @clear="load"
+      />
+      <q-btn flat icon="search" label="查询" @click="load" :loading="loading" />
+      <q-btn flat icon="refresh" label="刷新" @click="reload" :loading="loading" />
       <q-btn
         v-if="auth.role === 'bioops'"
         color="primary"
@@ -59,10 +71,12 @@ const auth = useAuthStore()
 const $q = useQuasar()
 const loading = ref(false)
 const rows = ref([])
+const keyword = ref('')
 
 const columns = [
   { name: 'id', label: 'ID', field: 'id', align: 'left' },
   { name: 'sample_name', label: '样例', field: 'sample_name', align: 'left' },
+  { name: 'note', label: '备注', field: 'note', align: 'left' },
   { name: 'status', label: '状态', field: 'status', align: 'left' },
   { name: 'created_by', label: '提交人', field: 'created_by', align: 'left' },
   { name: 'metrics', label: '指标摘要', field: 'metrics', align: 'left' },
@@ -87,12 +101,17 @@ function statusColor(s) {
 async function load() {
   loading.value = true
   try {
-    rows.value = await listJobs()
+    rows.value = await listJobs(keyword.value)
   } catch (e) {
     $q.notify({ type: 'negative', message: e.message || '加载失败' })
   } finally {
     loading.value = false
   }
+}
+
+function reload() {
+  keyword.value = ''
+  load()
 }
 
 onMounted(load)

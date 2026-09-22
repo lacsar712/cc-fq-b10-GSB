@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class LoginRequest(BaseModel):
@@ -29,6 +29,15 @@ class SampleOut(BaseModel):
 class JobCreate(BaseModel):
     sampleId: int | None = None
     fastqText: str | None = Field(default=None, alias="fastqText")
+    note: str = Field(max_length=256)
+
+    @field_validator("note")
+    @classmethod
+    def note_must_not_be_blank(cls, v: str) -> str:
+        v = (v or "").strip()
+        if not v:
+            raise ValueError("备注不能为空")
+        return v
 
     model_config = {"populate_by_name": True}
 
@@ -50,6 +59,7 @@ class JobOut(BaseModel):
     sample_id: int | None
     sample_name: str
     status: str
+    note: str
     created_by: str
     metrics: dict[str, Any] | None
     error_message: str | None
@@ -65,6 +75,7 @@ class JobListItem(BaseModel):
     sample_id: int | None
     sample_name: str
     status: str
+    note: str
     created_by: str
     metrics: dict[str, Any] | None
     error_message: str | None

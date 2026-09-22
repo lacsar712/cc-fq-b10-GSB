@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.auth import authenticate_user, create_access_token, get_current_user, require_bioops
@@ -78,6 +78,7 @@ def create_job(
         sample_id=sample.id if sample else None,
         sample_name=sample_name,
         status="pending",
+        note=body.note,
         created_by=user["username"],
         fastq_snapshot=fastq_text,
     )
@@ -97,8 +98,16 @@ def create_job(
 
 
 @router.get("/jobs", response_model=list[JobListItem])
-def list_jobs(_user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
-    return db.query(Job).order_by(Job.id.desc()).all()
+def list_jobs(
+    note: str | None = Query(default=None, description="按备注关键词过滤（服务端）"),
+    _user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Job)
+    keyword = (note or "").strip()
+    if keyword:
+        query = query.filter(Job.note.ilike(f"%{keyword}%"))
+    return query.order_by(Job.id.desc()).all()
 
 
 @router.get("/jobs/{job_id}", response_model=JobOut)

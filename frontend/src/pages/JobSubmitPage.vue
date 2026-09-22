@@ -8,6 +8,18 @@
 
     <q-card flat bordered>
       <q-card-section>
+        <div class="text-subtitle1 q-mb-sm">运行备注（必填）</div>
+        <q-input
+          v-model="note"
+          outlined
+          dense
+          maxlength="256"
+          counter
+          placeholder="例如：批次 A 复检 / 新试剂对照"
+          hint="备注会写入作业，并可在历史页按关键词检索"
+          class="q-mb-lg"
+        />
+
         <div class="text-subtitle1 q-mb-sm">方式一：选择 seed 样例</div>
         <q-select
           v-model="sampleId"
@@ -54,6 +66,7 @@ const $q = useQuasar()
 const samples = ref([])
 const sampleId = ref(null)
 const fastqText = ref('')
+const note = ref('')
 const submitting = ref(false)
 
 const sampleOptions = computed(() =>
@@ -76,6 +89,10 @@ async function load() {
 }
 
 async function submit() {
+  if (!note.value.trim()) {
+    $q.notify({ type: 'warning', message: '请填写运行备注（必填）' })
+    return
+  }
   if (!sampleId.value && !fastqText.value.trim()) {
     $q.notify({ type: 'warning', message: '请选择样例或粘贴 FASTQ 文本' })
     return
@@ -83,8 +100,8 @@ async function submit() {
   submitting.value = true
   try {
     const body = sampleId.value
-      ? { sampleId: sampleId.value }
-      : { fastqText: fastqText.value }
+      ? { sampleId: sampleId.value, note: note.value.trim() }
+      : { fastqText: fastqText.value, note: note.value.trim() }
     const job = await createJob(body)
     $q.notify({ type: 'positive', message: `作业 #${job.id} 已创建队` })
     router.push(`/jobs/${job.id}`)

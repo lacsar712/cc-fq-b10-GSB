@@ -42,8 +42,9 @@ export async function listSamples() {
   return data
 }
 
-export async function listJobs() {
-  const { data } = await api.get('/jobs')
+export async function listJobs(note) {
+  const keyword = (note || '').trim()
+  const { data } = await api.get('/jobs', { params: keyword ? { note: keyword } : {} })
   return data
 }
 

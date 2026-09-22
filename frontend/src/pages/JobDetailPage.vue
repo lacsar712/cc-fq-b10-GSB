@@ -11,6 +11,7 @@
       状态：{{ statusLabel(job.status) }}
       · 样例：{{ job.sample_name }}
       · 提交人：{{ job.created_by }}
+      · 备注：{{ job.note }}
       <div v-if="job.error_message" class="q-mt-sm">失败原因：{{ job.error_message }}</div>
     </q-banner>
 
